@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Registration } from '../../types';
-import { X, CheckCircle2, XCircle, MapPin, Eye, FileText, User, CreditCard, ShieldCheck } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Eye, FileText, User, CreditCard } from 'lucide-react';
 
 interface RegistrationDetailModalProps {
   registration: Registration | null;
@@ -108,13 +108,6 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
               <div className="text-xs">
                 <span className="text-slate-400 block">Account Number (NUBAN):</span>
                 <span className="font-mono font-bold text-[#E61C24] text-sm">{registration.account_number}</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-slate-400 block">Location Verification:</span>
-                <span className="inline-flex items-center space-x-1 text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-0.5">
-                  <MapPin className="w-3 h-3 text-emerald-600" />
-                  <span>Verified at Venue</span>
-                </span>
               </div>
             </div>
           </div>

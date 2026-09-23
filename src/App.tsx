@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { LocationGuard } from './components/LocationGuard';
 import { RegistrationForm } from './components/RegistrationForm';
 import { AdminLogin } from './components/admin/AdminLogin';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { RegistrationList } from './components/admin/RegistrationList';
 import { VenueSettings as VenueSettingsComponent } from './components/admin/VenueSettings';
 import { ExportPanel } from './components/admin/ExportPanel';
-import type { LocationVerificationResult } from './utils/geolocation';
 import type { Registration, VenueSettings, RegistrationStatus } from './types';
 import { apiService } from './services/api';
 import { LayoutDashboard, Users, Sliders, Download, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
@@ -21,7 +19,6 @@ export function App() {
   // App data state
   const [venue, setVenue] = useState<VenueSettings>(apiService.getVenueSettings());
   const [registrations, setRegistrations] = useState<Registration[]>(apiService.getRegistrations());
-  const [locationVerification, setLocationVerification] = useState<LocationVerificationResult | null>(null);
 
   const isAdminView = pathname.startsWith('/admin');
 
@@ -163,7 +160,7 @@ export function App() {
               </span>
             </button>
 
-            {/* Venue Settings Link */}
+            {/* System Settings Link */}
             <button
               onClick={() => {
                 setActiveAdminTab('venue');
@@ -176,7 +173,7 @@ export function App() {
               }`}
             >
               <Sliders className="w-4 h-4" />
-              <span>Venue Settings</span>
+              <span>Portal Settings</span>
             </button>
 
             {/* Export Link */}
@@ -250,12 +247,8 @@ export function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Full-Page Blocking Modal / Location Check */}
-        <LocationGuard venue={venue} onVerificationChange={setLocationVerification} />
-
         {/* Public Registration Form */}
         <RegistrationForm
-          locationVerification={locationVerification}
           venue={venue}
           onSuccess={refreshData}
         />
@@ -269,7 +262,7 @@ export function App() {
             <span>NBC Osun Registration Portal</span>
           </div>
           <div>
-            Official Corps Member Registration & Location Verification System &copy; {new Date().getFullYear()}
+            Official Corps Member Registration System &copy; {new Date().getFullYear()}
           </div>
         </div>
       </footer>

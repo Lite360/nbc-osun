@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { VenueSettings as TVenueSettings } from '../../types';
-import { MapPin, Save, Power, ShieldAlert, CheckCircle2, Sliders } from 'lucide-react';
+import { Save, Power, Sliders } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 interface VenueSettingsProps {
@@ -11,26 +11,20 @@ interface VenueSettingsProps {
 export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) => {
   const [name, setName] = useState(venue.name);
   const [address, setAddress] = useState(venue.address);
-  const [radius, setRadius] = useState(venue.radius);
   const [isActive, setIsActive] = useState(venue.is_active);
-  const [lat, setLat] = useState(venue.latitude);
-  const [lng, setLng] = useState(venue.longitude);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       name,
       address,
-      radius: Number(radius),
       is_active: isActive,
-      latitude: Number(lat),
-      longitude: Number(lng),
     });
 
     Swal.fire({
       icon: 'success',
-      title: 'Venue Settings Saved',
-      text: 'Registration venue configurations updated successfully.',
+      title: 'Portal Settings Saved',
+      text: 'Venue details and registration availability updated successfully.',
       confirmButtonColor: '#E61C24',
     });
   };
@@ -44,7 +38,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
       icon: nextStatus ? 'success' : 'warning',
       title: nextStatus ? 'Registration Opened' : 'Registration Closed',
       text: nextStatus
-        ? 'Public registration portal is now OPEN to corps members at the venue.'
+        ? 'Public registration portal is now OPEN to corps members.'
         : 'Public registration portal is now CLOSED.',
       confirmButtonColor: '#E61C24',
     });
@@ -53,9 +47,9 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
   return (
     <div className="max-w-3xl space-y-6">
       <div className="border-b border-slate-200 pb-4">
-        <h2 className="text-xl font-bold text-slate-900">Registration Venue & System Settings</h2>
+        <h2 className="text-xl font-bold text-slate-900">Portal & Venue Settings</h2>
         <p className="text-xs text-slate-500 mt-1">
-          Manage the single registration venue, address, geofencing radius, and global portal availability.
+          Configure venue information and control global registration portal availability.
         </p>
       </div>
 
@@ -81,7 +75,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
             </h4>
             <p className="text-xs text-slate-600">
               {isActive
-                ? 'Corps members can submit registrations when inside the venue radius.'
+                ? 'Public registration form is currently open and accepting submissions.'
                 : 'Registration form is locked and unavailable to public applicants.'}
             </p>
           </div>
@@ -104,7 +98,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
       <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
           <Sliders className="w-4 h-4 text-[#E61C24]" />
-          <span>Venue Configuration Parameters</span>
+          <span>Venue Information Parameters</span>
         </h3>
 
         {/* Venue Name */}
@@ -137,63 +131,13 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
           />
         </div>
 
-        {/* Radius */}
-        <div>
-          <label htmlFor="venueRadius" className="block text-xs font-semibold text-slate-700 mb-1">
-            Allowed Geofence Radius (metres)
-          </label>
-          <input
-            id="venueRadius"
-            type="number"
-            min={10}
-            max={5000}
-            required
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="nbc-input font-mono"
-          />
-          <p className="text-[11px] text-slate-500 mt-1">
-            Maximum physical distance allowed between device coordinates and venue center. Default: 100 metres.
-          </p>
-        </div>
-
-        {/* Internal Geocoding Coordinates */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div>
-            <label htmlFor="venueLat" className="block text-xs font-semibold text-slate-700 mb-1">
-              Internal Venue Latitude
-            </label>
-            <input
-              id="venueLat"
-              type="number"
-              step="any"
-              value={lat}
-              onChange={(e) => setLat(Number(e.target.value))}
-              className="nbc-input font-mono text-xs"
-            />
-          </div>
-          <div>
-            <label htmlFor="venueLng" className="block text-xs font-semibold text-slate-700 mb-1">
-              Internal Venue Longitude
-            </label>
-            <input
-              id="venueLng"
-              type="number"
-              step="any"
-              value={lng}
-              onChange={(e) => setLng(Number(e.target.value))}
-              className="nbc-input font-mono text-xs"
-            />
-          </div>
-        </div>
-
         <div className="pt-4 border-t border-slate-100 text-right">
           <button
             type="submit"
             className="nbc-btn-primary px-6 py-2.5 rounded text-xs font-bold inline-flex items-center space-x-2"
           >
             <Save className="w-4 h-4" />
-            <span>Save Venue Configuration</span>
+            <span>Save Settings</span>
           </button>
         </div>
       </form>

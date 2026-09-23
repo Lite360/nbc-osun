@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Registration, RegistrationStatus } from '../../types';
 import { OSUN_LGAS } from '../../data/osunLgas';
-import { Search, Filter, Eye, CheckCircle2, XCircle, Clock, MapPin } from 'lucide-react';
+import { Search, Filter, Eye, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { RegistrationDetailModal } from './RegistrationDetailModal';
 
 interface RegistrationListProps {
@@ -127,7 +127,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
                 <th className="py-3 px-4">State Code</th>
                 <th className="py-3 px-4">LGA</th>
                 <th className="py-3 px-4">Bank & Account</th>
-                <th className="py-3 px-4">Location</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
@@ -135,7 +134,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     No matching corps member registrations found.
                   </td>
                 </tr>
@@ -168,14 +167,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
                       </span>
                       <span className="font-mono text-[11px] text-slate-500 block">
                         {r.account_number}
-                      </span>
-                    </td>
-
-                    {/* Location */}
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="inline-flex items-center space-x-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-                        <MapPin className="w-3 h-3 text-emerald-600" />
-                        <span>Verified</span>
                       </span>
                     </td>
 
