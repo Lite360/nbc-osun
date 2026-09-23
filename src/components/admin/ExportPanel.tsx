@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Registration } from '../../types';
 import { OSUN_LGAS } from '../../data/osunLgas';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportUtils';
-import { FileSpreadsheet, FileText, Download, Filter, CheckCircle2 } from 'lucide-react';
+import { FileSpreadsheet, FileText, Download, Filter } from 'lucide-react';
 
 interface ExportPanelProps {
   registrations: Registration[];

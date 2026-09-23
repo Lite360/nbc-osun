@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, AlertTriangle, CheckCircle2, RefreshCw, Info, Compass } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, AlertTriangle, CheckCircle2, RefreshCw, Compass } from 'lucide-react';
 import type { VenueSettings } from '../types';
 import { verifyVenueLocation, type LocationVerificationResult } from '../utils/geolocation';
 

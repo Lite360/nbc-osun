@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
-import { Upload, FileCheck, AlertCircle, ShieldCheck, CreditCard, User, Mail, Phone, Building2, MapPin } from 'lucide-react';
+import { Upload, FileCheck, AlertCircle, ShieldCheck, CreditCard, User } from 'lucide-react';
 import { OSUN_LGAS, NIGERIAN_BANKS } from '../data/osunLgas';
 import type { LocationVerificationResult } from '../utils/geolocation';
 import type { VenueSettings } from '../types';

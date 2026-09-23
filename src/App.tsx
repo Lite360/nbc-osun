@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { LocationGuard } from './components/LocationGuard';
 import { RegistrationForm } from './components/RegistrationForm';
@@ -10,7 +10,7 @@ import { ExportPanel } from './components/admin/ExportPanel';
 import type { LocationVerificationResult } from './utils/geolocation';
 import type { Registration, VenueSettings, RegistrationStatus } from './types';
 import { apiService } from './services/api';
-import { LayoutDashboard, Users, Sliders, Download, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Sliders, Download } from 'lucide-react';
 
 export function App() {
   const [isAdminView, setIsAdminView] = useState(false);
