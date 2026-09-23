@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, AlertTriangle, CheckCircle2, RefreshCw, Compass } from 'lucide-react';
+import { MapPin, AlertTriangle, CheckCircle2, RefreshCw, Compass, Lock } from 'lucide-react';
 import type { VenueSettings } from '../types';
 import { verifyVenueLocation, type LocationVerificationResult } from '../utils/geolocation';
 
@@ -12,7 +12,7 @@ export const LocationGuard: React.FC<LocationGuardProps> = ({ venue, onVerificat
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [verification, setVerification] = useState<LocationVerificationResult | null>(null);
-  const [showSimModal, setShowSimModal] = useState<boolean>(false);
+  const [showSimOptions, setShowSimOptions] = useState<boolean>(false);
 
   const checkLocation = () => {
     if (!venue.is_active) {
@@ -57,9 +57,9 @@ export const LocationGuard: React.FC<LocationGuardProps> = ({ venue, onVerificat
         setLoading(false);
         let msg = 'Unable to retrieve your current location. Please allow location access.';
         if (err.code === err.PERMISSION_DENIED) {
-          msg = 'Location permission denied. Please allow location access in your browser settings.';
+          msg = 'Location permission denied. Please enable location access in your browser settings.';
         } else if (err.code === err.POSITION_UNAVAILABLE) {
-          msg = 'Location information is unavailable.';
+          msg = 'Location information is unavailable on your device.';
         } else if (err.code === err.TIMEOUT) {
           msg = 'Location request timed out.';
         }
@@ -87,7 +87,7 @@ export const LocationGuard: React.FC<LocationGuardProps> = ({ venue, onVerificat
     let userLng = venue.longitude;
 
     if (!atVenue) {
-      // Simulate ~5km away in Osun State
+      // Simulate ~5km away
       userLat = venue.latitude + 0.045;
       userLng = venue.longitude + 0.045;
     }
@@ -96,151 +96,140 @@ export const LocationGuard: React.FC<LocationGuardProps> = ({ venue, onVerificat
     setVerification(res);
     onVerificationChange(res);
     setError(null);
-    setShowSimModal(false);
+    setShowSimOptions(false);
   };
 
-  if (!venue.is_active) {
-    return (
-      <div className="bg-red-50 border-2 border-red-300 rounded-lg p-5 mb-6 text-center">
-        <div className="w-12 h-12 rounded-full bg-red-100 text-[#E61C24] flex items-center justify-center mx-auto mb-3">
-          <AlertTriangle className="w-6 h-6" />
-        </div>
-        <h3 className="text-lg font-bold text-red-900 mb-1">Registration Closed</h3>
-        <p className="text-sm text-red-700 max-w-md mx-auto">
-          Corps member registration is currently unavailable. Please check with venue administrators for schedule updates.
-        </p>
-      </div>
-    );
-  }
+  const isBlocked = !venue.is_active || (verification && !verification.isVerified && !loading);
 
   return (
-    <div className="mb-6">
-      {/* Status Box */}
-      {loading ? (
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-center space-x-3 text-slate-700">
-          <RefreshCw className="w-5 h-5 animate-spin text-[#E61C24]" />
-          <div className="text-sm">
-            <span className="font-semibold block">Verifying venue location...</span>
-            <span className="text-xs text-slate-500">Acquiring GPS coordinates to verify physical presence at venue.</span>
-          </div>
-        </div>
-      ) : verification?.isVerified ? (
-        <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-4 flex items-start space-x-3 text-emerald-900">
+    <>
+      {/* VERIFIED SUCCESS CALLOUT ABOVE FORM */}
+      {verification?.isVerified && !loading && (
+        <div className="mb-6 bg-emerald-50 border border-emerald-300 rounded-lg p-4 flex items-start space-x-3 text-emerald-900 shadow-xs">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1 text-sm">
             <h4 className="font-bold text-emerald-950 flex items-center justify-between">
               <span>✓ You are at the registration venue.</span>
-              <span className="text-xs font-normal text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
                 Within {verification.distanceMeters}m of venue
               </span>
             </h4>
             <p className="text-xs text-emerald-800 mt-1">
-              Location verified for {venue.name}. You may proceed with filling out the registration form below.
+              Location verified for <strong>{venue.name}</strong>. You may proceed with filling out the registration form.
             </p>
           </div>
         </div>
-      ) : (
-        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 text-red-900">
-          <div className="flex items-start space-x-3">
-            <AlertTriangle className="w-5 h-5 text-[#E61C24] flex-shrink-0 mt-0.5" />
-            <div className="flex-1 text-sm">
-              <h4 className="font-bold text-red-950 text-base mb-1">
-                You are not at the registration venue.
-              </h4>
-              <p className="text-xs sm:text-sm text-red-800 leading-relaxed mb-2">
-                Registration can only be completed at the designated registration venue ({venue.name}).
-                {verification?.distanceMeters ? (
-                  <span className="block font-semibold mt-1">
-                    Your current distance: ~{verification.distanceMeters}m (Allowed max radius: {venue.radius}m).
-                  </span>
-                ) : null}
-              </p>
+      )}
 
-              {error && (
-                <div className="bg-white/80 border border-red-200 rounded p-2 text-xs text-red-700 mb-2">
-                  <strong>Notice:</strong> {error}
+      {/* FULL-SCREEN BLOCKING POPUP MODAL (Covers whole interface when blocked) */}
+      {isBlocked && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5 my-auto">
+            {/* Header Icon */}
+            {!venue.is_active ? (
+              <div className="w-16 h-16 rounded-full bg-red-100 text-[#E61C24] flex items-center justify-center mx-auto shadow-inner border border-red-200">
+                <Lock className="w-8 h-8" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-red-100 text-[#E61C24] flex items-center justify-center mx-auto shadow-inner border border-red-200">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+            )}
+
+            {/* Title & Description */}
+            {!venue.is_active ? (
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Registration Closed
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                  Corps member registration is currently unavailable. Registration can only be completed when opened by venue administrators.
+                </p>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-500 font-medium">
+                  Venue: {venue.name}
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  You are not at the registration venue.
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                  Registration can only be completed at the designated registration venue.
+                </p>
 
-              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3.5 text-xs text-red-900 text-left space-y-1 mt-3">
+                  <div className="font-bold flex items-center space-x-1.5 text-red-950">
+                    <MapPin className="w-4 h-4 text-[#E61C24]" />
+                    <span>Venue Location Details:</span>
+                  </div>
+                  <div>Venue: <strong>{venue.name}</strong></div>
+                  {verification?.distanceMeters ? (
+                    <div>
+                      Your Current Distance: <strong className="text-[#E61C24]">~{verification.distanceMeters} metres</strong> (Allowed Max Radius: {venue.radius}m)
+                    </div>
+                  ) : null}
+                </div>
+
+                {error && (
+                  <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs text-amber-800">
+                    <strong>Notice:</strong> {error}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-100 space-y-3">
+              {venue.is_active && (
                 <button
                   type="button"
                   onClick={checkLocation}
-                  className="inline-flex items-center space-x-1.5 bg-[#E61C24] hover:bg-[#C4121A] text-white text-xs font-medium px-3 py-1.5 rounded transition"
+                  disabled={loading}
+                  className="w-full nbc-btn-primary py-3 rounded-lg text-sm font-bold flex items-center justify-center space-x-2 shadow-md"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Re-check My Location</span>
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span>{loading ? 'Acquiring GPS Location...' : 'Re-check My Location'}</span>
                 </button>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setShowSimModal(true)}
-                  className="inline-flex items-center space-x-1 text-xs text-red-700 hover:text-red-900 underline font-medium px-2 py-1"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Location Simulation (Demo/Testing)</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowSimOptions(!showSimOptions)}
+                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+              >
+                <Compass className="w-3.5 h-3.5 text-[#E61C24]" />
+                <span>{showSimOptions ? 'Hide Testing Options' : 'Location Simulation (Demo/Testing)'}</span>
+              </button>
+
+              {/* Simulation Options for Testers */}
+              {showSimOptions && (
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-left space-y-2 pt-3 animate-fade-in">
+                  <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">
+                    Testing Controls (Simulate Device Coordinates):
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => simulateLocation(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded text-xs font-bold transition text-center"
+                    >
+                      ✓ Inside Venue
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => simulateLocation(false)}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-xs font-bold transition text-center"
+                    >
+                      ✕ Outside Venue
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* Simulator Modal for Testing */}
-      {showSimModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl border border-slate-200">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 flex items-center space-x-2">
-                <MapPin className="w-5 h-5 text-[#E61C24]" />
-                <span>Venue Location Testing Tool</span>
-              </h3>
-              <button
-                onClick={() => setShowSimModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-              Use this tool to simulate physical device presence for testing the registration venue guard when testing off-site.
-            </p>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => simulateLocation(true)}
-                className="w-full text-left p-3 rounded border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold flex items-center justify-between transition"
-              >
-                <div>
-                  <div className="text-sm font-bold text-emerald-950">✓ Simulate INSIDE Venue</div>
-                  <div className="text-emerald-700 font-normal">Sets coordinates to venue center ({venue.name})</div>
-                </div>
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              </button>
-
-              <button
-                onClick={() => simulateLocation(false)}
-                className="w-full text-left p-3 rounded border border-red-300 bg-red-50 hover:bg-red-100 text-red-900 text-xs font-semibold flex items-center justify-between transition"
-              >
-                <div>
-                  <div className="text-sm font-bold text-red-950">✕ Simulate OUTSIDE Venue</div>
-                  <div className="text-red-700 font-normal">Sets coordinates ~5km outside venue radius</div>
-                </div>
-                <AlertTriangle className="w-5 h-5 text-[#E61C24]" />
-              </button>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-slate-100 text-right">
-              <button
-                onClick={() => setShowSimModal(false)}
-                className="text-xs font-medium text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
