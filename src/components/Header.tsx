@@ -1,16 +1,16 @@
 import React from 'react';
-import { Shield, Lock, UserCheck, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface HeaderProps {
   isAdminView: boolean;
-  onToggleAdminView: () => void;
+  onNavigatePublic?: () => void;
   isAdminLoggedIn?: boolean;
   onLogoutAdmin?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   isAdminView,
-  onToggleAdminView,
+  onNavigatePublic,
   isAdminLoggedIn,
   onLogoutAdmin,
 }) => {
@@ -32,37 +32,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center space-x-2">
-          {isAdminView ? (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={onToggleAdminView}
-                className="inline-flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm px-3 py-1.5 rounded-md transition font-medium border border-white/20"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Public Form</span>
-              </button>
-              {isAdminLoggedIn && onLogoutAdmin && (
-                <button
-                  onClick={onLogoutAdmin}
-                  className="bg-white text-[#E61C24] hover:bg-red-50 text-xs sm:text-sm px-3 py-1.5 rounded-md font-semibold transition shadow-sm"
-                >
-                  Logout
-                </button>
-              )}
-            </div>
-          ) : (
+        {/* Action Button - Only visible on /admin route */}
+        {isAdminView && (
+          <div className="flex items-center space-x-2">
             <button
-              onClick={onToggleAdminView}
+              onClick={onNavigatePublic}
               className="inline-flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm px-3 py-1.5 rounded-md transition font-medium border border-white/20"
-              title="Admin Portal Access"
             >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Admin Login</span>
+              <ArrowLeft className="w-4 h-4" />
+              <span>Public Registration Portal</span>
             </button>
-          )}
-        </div>
+
+            {isAdminLoggedIn && onLogoutAdmin && (
+              <button
+                onClick={onLogoutAdmin}
+                className="bg-white text-[#E61C24] hover:bg-red-50 text-xs sm:text-sm px-3 py-1.5 rounded-md font-semibold transition shadow-sm"
+              >
+                Logout
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

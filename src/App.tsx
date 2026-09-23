@@ -13,7 +13,7 @@ import { apiService } from './services/api';
 import { LayoutDashboard, Users, Sliders, Download } from 'lucide-react';
 
 export function App() {
-  const [isAdminView, setIsAdminView] = useState(false);
+  const [pathname, setPathname] = useState<string>(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [activeAdminTab, setActiveAdminTab] = useState<'dashboard' | 'registrations' | 'venue' | 'exports'>('dashboard');
 
@@ -22,9 +22,23 @@ export function App() {
   const [registrations, setRegistrations] = useState<Registration[]>(apiService.getRegistrations());
   const [locationVerification, setLocationVerification] = useState<LocationVerificationResult | null>(null);
 
+  const isAdminView = pathname.startsWith('/admin');
+
   useEffect(() => {
     setIsAdminLoggedIn(apiService.isAdminLoggedIn());
+
+    const handlePopState = () => {
+      setPathname(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const navigateToPublic = () => {
+    window.history.pushState({}, '', '/');
+    setPathname('/');
+  };
 
   const refreshData = () => {
     setVenue(apiService.getVenueSettings());
@@ -48,7 +62,7 @@ export function App() {
   const handleLogout = () => {
     apiService.logoutAdmin();
     setIsAdminLoggedIn(false);
-    setIsAdminView(false);
+    navigateToPublic();
   };
 
   return (
@@ -56,7 +70,7 @@ export function App() {
       {/* Top Header */}
       <Header
         isAdminView={isAdminView}
-        onToggleAdminView={() => setIsAdminView(!isAdminView)}
+        onNavigatePublic={navigateToPublic}
         isAdminLoggedIn={isAdminLoggedIn}
         onLogoutAdmin={handleLogout}
       />
@@ -64,7 +78,7 @@ export function App() {
       {/* Main Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {isAdminView ? (
-          /* ADMIN PORTAL */
+          /* ADMIN PORTAL - ONLY ACCESSIBLE VIA /admin ROUTE */
           <div>
             {!isAdminLoggedIn ? (
               <AdminLogin onLoginSuccess={() => setIsAdminLoggedIn(true)} />
@@ -145,7 +159,7 @@ export function App() {
             )}
           </div>
         ) : (
-          /* PUBLIC REGISTRATION FORM */
+          /* PUBLIC REGISTRATION FORM (DEFAULT ROOT ROUTE) */
           <div className="max-w-3xl mx-auto space-y-4">
             {/* Geofence Guard */}
             <LocationGuard venue={venue} onVerificationChange={setLocationVerification} />
