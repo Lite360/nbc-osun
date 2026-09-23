@@ -1,4 +1,5 @@
 import type { Registration, VenueSettings, AuditLog, AdminUser, RegistrationStatus } from '../types';
+import { db } from './db';
 
 const INITIAL_VENUE: VenueSettings = {
   id: 'venue-1',
@@ -127,6 +128,12 @@ export const apiService = {
       updated_at: new Date().toISOString(),
     };
     setStored(KEYS.VENUE, updated);
+    
+    // Asynchronously update Neon DB if configured
+    if (db.isConfigured()) {
+      db.updateVenue(updated).catch(err => console.error('Neon DB updateVenue error:', err));
+    }
+
     this.addLog('Venue Updated', `Admin updated registration venue configuration (${updated.name})`);
     return updated;
   },
@@ -169,6 +176,12 @@ export const apiService = {
 
     const updatedList = [newRecord, ...list];
     setStored(KEYS.REGISTRATIONS, updatedList);
+
+    // Asynchronously sync to Neon DB if configured
+    if (db.isConfigured()) {
+      db.createRegistration(newRecord).catch(err => console.error('Neon DB createRegistration error:', err));
+    }
+
     this.addLog('New Registration', `Corps member ${data.full_name} (${data.state_code}) registered.`);
     return newRecord;
   },
@@ -193,6 +206,12 @@ export const apiService = {
 
     list[index] = updated;
     setStored(KEYS.REGISTRATIONS, list);
+
+    // Asynchronously sync to Neon DB if configured
+    if (db.isConfigured()) {
+      db.updateRegistrationStatus(id, status, adminNote, adminName).catch(err => console.error('Neon DB updateRegistrationStatus error:', err));
+    }
+
     this.addLog(`Registration ${status.toUpperCase()}`, `Registration ${current.registration_reference} status changed to ${status} by ${adminName}`);
     return updated;
   },
