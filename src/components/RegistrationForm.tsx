@@ -16,7 +16,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 }) => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [lga, setLga] = useState('');
   const [stateCode, setStateCode] = useState('');
   const [bankName, setBankName] = useState('');
@@ -75,7 +74,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return (
       fullName.trim() !== '' &&
       phone.trim().length >= 10 &&
-      email.trim() !== '' &&
       lga !== '' &&
       stateCode.trim() !== '' &&
       bankName !== '' &&
@@ -93,8 +91,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (!venue.is_active) {
       Swal.fire({
         icon: 'error',
-        title: 'Registration Closed',
-        text: 'Corps member registration is currently unavailable.',
+        title: 'Attendance Closed',
+        text: 'Corps member attendance submission is currently unavailable.',
         confirmButtonColor: '#E61C24',
       });
       return;
@@ -119,7 +117,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         id_card_filename: idFile.name,
         id_card_type: idFile.type,
         phone: phone.trim(),
-        email: email.trim().toLowerCase(),
+        email: '',
         lga,
         state_code: stateCode.trim().toUpperCase(),
         bank_name: bankName,
@@ -132,12 +130,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       // SweetAlert2 Confirmation
       await Swal.fire({
-        title: 'Registration Successful',
+        title: 'Attendance Submitted',
         html: `
           <div class="text-left py-2">
-            <p class="text-gray-700 text-sm mb-3">Your registration has been submitted successfully to the NBC Osun database.</p>
+            <p class="text-gray-700 text-sm mb-3">Your attendance has been submitted successfully to the NBC Osun database.</p>
             <div class="bg-red-50 border border-red-200 rounded p-3 text-center">
-              <span class="text-xs text-red-600 uppercase tracking-wider font-semibold block">Registration Reference Number</span>
+              <span class="text-xs text-red-600 uppercase tracking-wider font-semibold block">Attendance Reference Number</span>
               <span class="text-lg font-bold text-[#E61C24] font-mono block mt-0.5">${newRegistration.registration_reference}</span>
             </div>
             <p class="text-xs text-gray-500 mt-3 text-center">Please save or screenshot this reference number for your records.</p>
@@ -151,7 +149,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       // Reset form
       setFullName('');
       setPhone('');
-      setEmail('');
       setLga('');
       setStateCode('');
       setBankName('');
@@ -162,6 +159,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setConsent(false);
 
       onSuccess();
+      window.location.reload();
     } catch (err: any) {
       setSubmitting(false);
       Swal.fire({
@@ -184,9 +182,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             <div className="w-16 h-16 rounded-full bg-red-100 text-[#E61C24] flex items-center justify-center mx-auto border border-red-200">
               <Lock className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Registration Closed</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Attendance Closed</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Corps member registration is currently closed. Please check back later or contact portal administrators for schedule updates.
+              Corps member attendance submission is currently closed. Please check back later or contact portal administrators for schedule updates.
             </p>
             <div className="bg-slate-50 border border-slate-200 rounded p-2.5 text-xs text-slate-500 font-medium">
               NBC Osun Portal Status: CLOSED
@@ -199,10 +197,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 sm:p-7">
         <div className="border-b border-slate-200 pb-4 mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Corps Member Registration Form
+            Corps Member Attendance Form
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Complete all required fields below to register for the official NBC Osun corps member verification.
+            Complete all required fields below to confirm your attendance at the NBC Osun program.
           </p>
         </div>
 
@@ -262,23 +260,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   placeholder="e.g. 08031234567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="nbc-input"
-                />
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  disabled={isClosed || submitting}
-                  placeholder="e.g. corpsmember@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="nbc-input"
                 />
               </div>
@@ -449,7 +430,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 className="mt-1 h-4 w-4 rounded border-slate-300 text-[#E61C24] focus:ring-[#E61C24]"
               />
               <span className="text-xs text-slate-600 leading-relaxed">
-                I hereby declare that all information provided is accurate and true. I authorize NBC Osun to process my personal details solely for corps member verification purposes.
+                I hereby declare that all information provided is accurate and true. I authorize NBC Osun to process my personal details solely for attendance verification purposes.
               </span>
             </label>
           </div>

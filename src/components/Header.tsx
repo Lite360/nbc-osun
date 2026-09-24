@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
               NBC OSUN
             </h1>
             <p className="text-xs text-red-100 font-medium">
-              Corps Member Registration & Verification Portal
+              Corps Member's Attendance form
             </p>
           </div>
         </div>
@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="inline-flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm px-3 py-1.5 rounded-md transition font-medium border border-white/20"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Public Registration Portal</span>
+              <span>Public Attendance Portal</span>
             </button>
 
             {isAdminLoggedIn && onLogoutAdmin && (

@@ -25,7 +25,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ registrations }) => {
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-xl font-bold text-slate-900">Export Management System</h2>
         <p className="text-xs text-slate-500 mt-1">
-          Generate and download registered corps member reports in CSV, Excel, or formatted PDF.
+          Generate and download corps member attendance reports in CSV, Excel, or formatted PDF.
         </p>
       </div>
 

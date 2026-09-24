@@ -3,7 +3,7 @@ import { db } from './db';
 
 const INITIAL_VENUE: VenueSettings = {
   id: 'venue-1',
-  name: 'NBC Osun Corps Member Registration Venue',
+  name: 'NBC Osun Corps Member Attendance Venue',
   address: 'NBC Bottling Plant Premises, Osogbo, Osun State, Nigeria',
   latitude: 7.7827,
   longitude: 4.5418,
@@ -134,13 +134,28 @@ export const apiService = {
       db.updateVenue(updated).catch(err => console.error('Neon DB updateVenue error:', err));
     }
 
-    this.addLog('Venue Updated', `Admin updated registration venue configuration (${updated.name})`);
+    this.addLog('Venue Updated', `Admin updated attendance venue configuration (${updated.name})`);
     return updated;
   },
 
   // Registrations
   getRegistrations(): Registration[] {
     return getStored<Registration[]>(KEYS.REGISTRATIONS, INITIAL_REGISTRATIONS);
+  },
+
+  async fetchRegistrations(): Promise<Registration[]> {
+    if (db.isConfigured()) {
+      try {
+        const dbRecords = await db.getRegistrations();
+        if (dbRecords && dbRecords.length > 0) {
+          setStored(KEYS.REGISTRATIONS, dbRecords);
+          return dbRecords;
+        }
+      } catch (err) {
+        console.error('Failed to fetch from Neon DB:', err);
+      }
+    }
+    return this.getRegistrations();
   },
 
   getRegistrationById(id: string): Registration | undefined {
@@ -158,7 +173,7 @@ export const apiService = {
     );
 
     if (duplicate) {
-      throw new Error(`A corps member with State Code (${data.state_code}) or Phone (${data.phone}) is already registered.`);
+      throw new Error(`A corps member with State Code (${data.state_code}) or Phone (${data.phone}) has already submitted attendance.`);
     }
 
     const year = new Date().getFullYear();
@@ -182,7 +197,7 @@ export const apiService = {
       db.createRegistration(newRecord).catch(err => console.error('Neon DB createRegistration error:', err));
     }
 
-    this.addLog('New Registration', `Corps member ${data.full_name} (${data.state_code}) registered.`);
+    this.addLog('New Attendance', `Corps member ${data.full_name} (${data.state_code}) submitted attendance.`);
     return newRecord;
   },
 
@@ -212,8 +227,23 @@ export const apiService = {
       db.updateRegistrationStatus(id, status, adminNote, adminName).catch(err => console.error('Neon DB updateRegistrationStatus error:', err));
     }
 
-    this.addLog(`Registration ${status.toUpperCase()}`, `Registration ${current.registration_reference} status changed to ${status} by ${adminName}`);
+    this.addLog(`Attendance ${status.toUpperCase()}`, `Attendance ${current.registration_reference} status changed to ${status} by ${adminName}`);
     return updated;
+  },
+
+  deleteRegistration(id: string): void {
+    const list = this.getRegistrations();
+    const record = list.find(r => r.id === id);
+    const updatedList = list.filter(r => r.id !== id);
+    setStored(KEYS.REGISTRATIONS, updatedList);
+
+    if (db.isConfigured()) {
+      db.deleteRegistration(id).catch(err => console.error('Neon DB deleteRegistration error:', err));
+    }
+
+    if (record) {
+      this.addLog('Attendance Deleted', `Deleted attendance record ${record.registration_reference} (${record.full_name})`);
+    }
   },
 
   // Audit Logs
@@ -224,7 +254,7 @@ export const apiService = {
         admin_id: 'admin-1',
         admin_name: 'System',
         action: 'System Initialized',
-        description: 'NBC Osun portal ready for registrations.',
+        description: 'NBC Osun attendance portal ready for submissions.',
         created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
       },
     ]);

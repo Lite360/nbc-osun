@@ -22,7 +22,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ registrations, o
         <div>
           <h2 className="text-xl font-bold text-slate-900">System Dashboard Overview</h2>
           <p className="text-xs text-slate-500">
-            Real-time analytics for corps member registration & verification in Osun State.
+            Real-time analytics for corps member attendance & verification in Osun State.
           </p>
         </div>
       </div>
@@ -98,7 +98,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ registrations, o
             </div>
           </div>
           <div className="text-2xl font-bold text-white mt-2">{todaysCount.toLocaleString()}</div>
-          <div className="text-[11px] text-slate-400 mt-1">New registrations today</div>
+          <div className="text-[11px] text-slate-400 mt-1">New attendees today</div>
         </div>
       </div>
     </div>

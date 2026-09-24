@@ -6,6 +6,9 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { RegistrationList } from './components/admin/RegistrationList';
 import { VenueSettings as VenueSettingsComponent } from './components/admin/VenueSettings';
 import { ExportPanel } from './components/admin/ExportPanel';
+import { CookieConsent } from './components/CookieConsent';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsConditions } from './components/TermsConditions';
 import type { Registration, VenueSettings, RegistrationStatus } from './types';
 import { apiService } from './services/api';
 import { LayoutDashboard, Users, Sliders, Download, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
@@ -14,33 +17,62 @@ export function App() {
   const [pathname, setPathname] = useState<string>(window.location.pathname);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [activeAdminTab, setActiveAdminTab] = useState<'dashboard' | 'registrations' | 'venue' | 'exports'>('dashboard');
+  const [isTabLoading, setIsTabLoading] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   // App data state
   const [venue, setVenue] = useState<VenueSettings>(apiService.getVenueSettings());
   const [registrations, setRegistrations] = useState<Registration[]>(apiService.getRegistrations());
 
-  const isAdminView = pathname.startsWith('/admin');
+  const isAdminView = pathname.startsWith('/access');
+
+  const switchTab = (tab: 'dashboard' | 'registrations' | 'venue' | 'exports') => {
+    if (tab === activeAdminTab) return;
+    setIsTabLoading(true);
+    setActiveAdminTab(tab);
+    setIsMobileSidebarOpen(false);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 150);
+  };
+
+  const refreshData = async () => {
+    setVenue(apiService.getVenueSettings());
+    const latest = await apiService.fetchRegistrations();
+    setRegistrations(latest);
+  };
 
   useEffect(() => {
     setIsAdminLoggedIn(apiService.isAdminLoggedIn());
+    refreshData();
 
     const handlePopState = () => {
       setPathname(window.location.pathname);
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+
+    // Auto-poll database every 5 seconds when in admin view for real-time fresh attendance submissions
+    let intervalId: any = null;
+    if (pathname.startsWith('/access')) {
+      intervalId = setInterval(() => {
+        apiService.fetchRegistrations().then(latest => {
+          setRegistrations(latest);
+        });
+      }, 5000);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [pathname]);
 
   const navigateToPublic = () => {
     window.history.pushState({}, '', '/');
     setPathname('/');
-  };
-
-  const refreshData = () => {
-    setVenue(apiService.getVenueSettings());
-    setRegistrations(apiService.getRegistrations());
   };
 
   const handleSaveVenue = (updated: Partial<VenueSettings>) => {
@@ -54,6 +86,11 @@ export function App() {
     adminNote?: string
   ) => {
     apiService.updateRegistrationStatus(id, status, adminNote);
+    refreshData();
+  };
+
+  const handleDeleteRegistration = (id: string) => {
+    apiService.deleteRegistration(id);
     refreshData();
   };
 
@@ -125,10 +162,7 @@ export function App() {
 
             {/* Dashboard Link */}
             <button
-              onClick={() => {
-                setActiveAdminTab('dashboard');
-                setIsMobileSidebarOpen(false);
-              }}
+              onClick={() => switchTab('dashboard')}
               className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition ${
                 activeAdminTab === 'dashboard'
                   ? 'bg-[#E61C24] text-white shadow-md'
@@ -141,10 +175,7 @@ export function App() {
 
             {/* Registrations Link */}
             <button
-              onClick={() => {
-                setActiveAdminTab('registrations');
-                setIsMobileSidebarOpen(false);
-              }}
+              onClick={() => switchTab('registrations')}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold transition ${
                 activeAdminTab === 'registrations'
                   ? 'bg-[#E61C24] text-white shadow-md'
@@ -162,10 +193,7 @@ export function App() {
 
             {/* System Settings Link */}
             <button
-              onClick={() => {
-                setActiveAdminTab('venue');
-                setIsMobileSidebarOpen(false);
-              }}
+              onClick={() => switchTab('venue')}
               className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition ${
                 activeAdminTab === 'venue'
                   ? 'bg-[#E61C24] text-white shadow-xs'
@@ -178,10 +206,7 @@ export function App() {
 
             {/* Export Link */}
             <button
-              onClick={() => {
-                setActiveAdminTab('exports');
-                setIsMobileSidebarOpen(false);
-              }}
+              onClick={() => switchTab('exports')}
               className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition ${
                 activeAdminTab === 'exports'
                   ? 'bg-[#E61C24] text-white shadow-xs'
@@ -200,7 +225,7 @@ export function App() {
               className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-md text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
               <ArrowLeft className="w-4 h-4 text-red-400" />
-              <span>Public Registration</span>
+              <span>Public Attendance</span>
             </button>
 
             <button
@@ -215,25 +240,40 @@ export function App() {
 
         {/* ADMIN CONTENT CANVAS */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl overflow-y-auto">
-          {activeAdminTab === 'dashboard' && (
-            <AdminDashboard
-              registrations={registrations}
-              onSelectTab={(tab) => setActiveAdminTab(tab as any)}
-            />
-          )}
+          {isTabLoading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="flex flex-col items-center space-y-3">
+                <svg className="animate-spin h-8 w-8 text-[#E61C24]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="text-xs font-semibold text-slate-500">Loading view...</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {activeAdminTab === 'dashboard' && (
+                <AdminDashboard
+                  registrations={registrations}
+                  onSelectTab={(tab) => switchTab(tab as any)}
+                />
+              )}
 
-          {activeAdminTab === 'registrations' && (
-            <RegistrationList
-              registrations={registrations}
-              onUpdateStatus={handleUpdateRegistrationStatus}
-            />
-          )}
+              {activeAdminTab === 'registrations' && (
+                <RegistrationList
+                  registrations={registrations}
+                  onUpdateStatus={handleUpdateRegistrationStatus}
+                  onDelete={handleDeleteRegistration}
+                />
+              )}
 
-          {activeAdminTab === 'venue' && (
-            <VenueSettingsComponent venue={venue} onSave={handleSaveVenue} />
-          )}
+              {activeAdminTab === 'venue' && (
+                <VenueSettingsComponent venue={venue} onSave={handleSaveVenue} />
+              )}
 
-          {activeAdminTab === 'exports' && <ExportPanel registrations={registrations} />}
+              {activeAdminTab === 'exports' && <ExportPanel registrations={registrations} />}
+            </>
+          )}
         </main>
       </div>
     );
@@ -256,16 +296,43 @@ export function App() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2 font-semibold text-slate-700">
             <span className="w-2 h-2 rounded-full bg-[#E61C24]"></span>
-            <span>NBC Osun Registration Portal</span>
+            <span>NBC Osun Attendance Portal</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowPrivacy(true)}
+              className="text-slate-500 hover:text-[#E61C24] transition font-medium"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-slate-300">|</span>
+            <button
+              onClick={() => setShowTerms(true)}
+              className="text-slate-500 hover:text-[#E61C24] transition font-medium"
+            >
+              Terms & Conditions
+            </button>
           </div>
           <div>
-            Official Corps Member Registration System &copy; {new Date().getFullYear()}
+            Official Corps Member Attendance System &copy; {new Date().getFullYear()}
           </div>
         </div>
       </footer>
+
+      {/* Cookie Consent Banner */}
+      <CookieConsent
+        onOpenPrivacy={() => setShowPrivacy(true)}
+        onOpenTerms={() => setShowTerms(true)}
+      />
+
+      {/* Privacy Policy Modal */}
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+
+      {/* Terms & Conditions Modal */}
+      {showTerms && <TermsConditions onClose={() => setShowTerms(false)} />}
     </div>
   );
 }

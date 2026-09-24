@@ -59,8 +59,13 @@ CREATE TABLE IF NOT EXISTS registration_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create sequence for atomic registration reference numbers
+CREATE SEQUENCE IF NOT EXISTS registration_ref_seq START WITH 1 INCREMENT BY 1;
+
 -- Indices for performance on frequent query patterns
 CREATE INDEX IF NOT EXISTS idx_registrations_state_code ON registrations(state_code);
+CREATE INDEX IF NOT EXISTS idx_registrations_upper_state_code ON registrations(UPPER(state_code));
+CREATE INDEX IF NOT EXISTS idx_registrations_phone ON registrations(phone);
 CREATE INDEX IF NOT EXISTS idx_registrations_status ON registrations(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_lga ON registrations(lga);
 CREATE INDEX IF NOT EXISTS idx_registrations_reference ON registrations(registration_reference);

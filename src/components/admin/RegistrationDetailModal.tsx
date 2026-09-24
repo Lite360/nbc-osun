@@ -6,17 +6,20 @@ interface RegistrationDetailModalProps {
   registration: Registration | null;
   onClose: () => void;
   onUpdateStatus: (id: string, status: 'confirmed' | 'rejected', adminNote?: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = ({
   registration,
   onClose,
   onUpdateStatus,
+  onDelete,
 }) => {
   if (!registration) return null;
 
   const [adminNote, setAdminNote] = useState(registration.admin_note || '');
   const [showImageFull, setShowImageFull] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleConfirm = () => {
     onUpdateStatus(registration.id, 'confirmed', adminNote);
@@ -26,6 +29,12 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
     onUpdateStatus(registration.id, 'rejected', adminNote);
   };
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(registration.id);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-lg max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
@@ -33,7 +42,7 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
         <div className="bg-[#E61C24] text-white px-6 py-4 flex items-center justify-between">
           <div>
             <span className="text-xs text-red-100 font-medium uppercase tracking-wider block">
-              Registration Detail View
+              Attendance Detail View
             </span>
             <h3 className="text-lg font-bold font-mono">{registration.registration_reference}</h3>
           </div>
@@ -157,12 +166,22 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
 
         {/* Modal Action Footer */}
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <button
-            onClick={onClose}
-            className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-4 py-2 rounded bg-white border border-slate-300"
-          >
-            Close
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onClose}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-800 px-4 py-2 rounded bg-white border border-slate-300"
+            >
+              Close
+            </button>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(registration.id)}
+                className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded border border-red-200 transition"
+              >
+                Delete Record
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center space-x-2">
             <button
@@ -178,7 +197,7 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded transition inline-flex items-center space-x-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Confirm Registration</span>
+              <span>Confirm Attendance</span>
             </button>
           </div>
         </div>

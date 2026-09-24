@@ -2,39 +2,29 @@ import type { Registration } from '../types';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
-export function exportToCSV(registrations: Registration[], filename = 'NBC_Osun_Registrations.csv') {
+export function exportToCSV(registrations: Registration[], filename = 'NBC_Osun_Attendance.csv') {
   if (!registrations.length) return;
 
   const headers = [
-    'Reference',
+    'S/N',
     'Full Name',
     'State Code',
     'Phone',
-    'Email',
     'LGA',
     'Bank Name',
     'Account Name',
-    'Account Number',
-    'Location Verified',
-    'Status',
-    'Admin Note',
-    'Registration Date'
+    'Account Number'
   ];
 
-  const rows = registrations.map(r => [
-    `"${r.registration_reference}"`,
+  const rows = registrations.map((r, index) => [
+    `"${index + 1}"`,
     `"${r.full_name.replace(/"/g, '""')}"`,
     `"${r.state_code}"`,
     `"${r.phone}"`,
-    `"${r.email}"`,
     `"${r.lga}"`,
     `"${r.bank_name}"`,
     `"${r.account_name.replace(/"/g, '""')}"`,
-    `"${r.account_number}"`,
-    `"${r.location_verified ? 'YES' : 'NO'}"`,
-    `"${r.status.toUpperCase()}"`,
-    `"${(r.admin_note || '').replace(/"/g, '""')}"`,
-    `"${new Date(r.created_at).toLocaleString()}"`
+    `"${r.account_number}"`
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
@@ -49,63 +39,63 @@ export function exportToCSV(registrations: Registration[], filename = 'NBC_Osun_
   document.body.removeChild(link);
 }
 
-export function exportToExcel(registrations: Registration[], filename = 'NBC_Osun_Registrations.xlsx') {
+export function exportToExcel(registrations: Registration[], filename = 'NBC_Osun_Attendance.xlsx') {
   if (!registrations.length) return;
 
-  const data = registrations.map(r => ({
-    'Registration Reference': r.registration_reference,
+  const data = registrations.map((r, index) => ({
+    'S/N': index + 1,
     'Full Name': r.full_name,
     'State Code': r.state_code,
     'Phone': r.phone,
-    'Email': r.email,
     'LGA': r.lga,
     'Bank Name': r.bank_name,
     'Account Name': r.account_name,
-    'Account Number': r.account_number,
-    'Location Verified': r.location_verified ? 'Verified at Venue' : 'Unverified',
-    'Status': r.status.toUpperCase(),
-    'Admin Note': r.admin_note || '-',
-    'Registration Date': new Date(r.created_at).toLocaleString()
+    'Account Number': r.account_number
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');
 
   XLSX.writeFile(workbook, filename);
 }
 
-export function exportToPDF(registrations: Registration[], filename = 'NBC_Osun_Registrations.pdf') {
+export function exportToPDF(registrations: Registration[], filename = 'NBC_Osun_Attendance.pdf') {
   if (!registrations.length) return;
 
   const doc = new jsPDF({ orientation: 'landscape' });
-  
-  // Header Title
+  const pageWidth = doc.internal.pageSize.width;
+
+  // Centralized Header Title
   doc.setFontSize(16);
   doc.setTextColor(230, 28, 36); // NBC Red
-  doc.text('NBC OSUN - CORPS MEMBER REGISTRATION REPORT', 14, 15);
+  doc.text('NBC OSUN - CORPS MEMBER ATTENDANCE REPORT', pageWidth / 2, 15, { align: 'center' });
 
+  // Centralized Subtitle / Metadata
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${registrations.length}`, 14, 22);
+  doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${registrations.length}`, pageWidth / 2, 22, { align: 'center' });
 
   let startY = 30;
   const pageHeight = doc.internal.pageSize.height;
 
-  // Simple Table Header
-  doc.setFillColor(230, 28, 36);
-  doc.rect(14, startY, 269, 8, 'F');
+  // Table Header Function
+  const renderTableHeader = (yPos: number) => {
+    doc.setFillColor(230, 28, 36);
+    doc.rect(14, yPos, 269, 8, 'F');
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text('S/N', 18, yPos + 5.5);
+    doc.text('Full Name', 35, yPos + 5.5);
+    doc.text('State Code', 85, yPos + 5.5);
+    doc.text('Phone', 120, yPos + 5.5);
+    doc.text('LGA', 150, yPos + 5.5);
+    doc.text('Bank Name', 185, yPos + 5.5);
+    doc.text('Account Name', 225, yPos + 5.5);
+    doc.text('Account Number', 260, yPos + 5.5);
+  };
 
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Reference', 16, startY + 5.5);
-  doc.text('Full Name', 55, startY + 5.5);
-  doc.text('State Code', 105, startY + 5.5);
-  doc.text('LGA', 135, startY + 5.5);
-  doc.text('Phone', 170, startY + 5.5);
-  doc.text('Status', 210, startY + 5.5);
-  doc.text('Date', 240, startY + 5.5);
-
+  renderTableHeader(startY);
   startY += 8;
 
   doc.setTextColor(30, 30, 30);
@@ -115,19 +105,7 @@ export function exportToPDF(registrations: Registration[], filename = 'NBC_Osun_
     if (startY > pageHeight - 15) {
       doc.addPage();
       startY = 15;
-      
-      // Draw Header again on new page
-      doc.setFillColor(230, 28, 36);
-      doc.rect(14, startY, 269, 8, 'F');
-      doc.setFontSize(9);
-      doc.setTextColor(255, 255, 255);
-      doc.text('Reference', 16, startY + 5.5);
-      doc.text('Full Name', 55, startY + 5.5);
-      doc.text('State Code', 105, startY + 5.5);
-      doc.text('LGA', 135, startY + 5.5);
-      doc.text('Phone', 170, startY + 5.5);
-      doc.text('Status', 210, startY + 5.5);
-      doc.text('Date', 240, startY + 5.5);
+      renderTableHeader(startY);
       startY += 8;
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(8);
@@ -138,13 +116,18 @@ export function exportToPDF(registrations: Registration[], filename = 'NBC_Osun_
       doc.rect(14, startY, 269, 7, 'F');
     }
 
-    doc.text(r.registration_reference.substring(0, 18), 16, startY + 5);
-    doc.text(r.full_name.substring(0, 24), 55, startY + 5);
-    doc.text(r.state_code, 105, startY + 5);
-    doc.text(r.lga.substring(0, 16), 135, startY + 5);
-    doc.text(r.phone, 170, startY + 5);
-    doc.text(r.status.toUpperCase(), 210, startY + 5);
-    doc.text(new Date(r.created_at).toLocaleDateString(), 240, startY + 5);
+    // Grid row borders for clean tabulated presentation
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(14, startY, 269, 7);
+
+    doc.text(String(idx + 1), 18, startY + 5);
+    doc.text(r.full_name.substring(0, 22), 35, startY + 5);
+    doc.text(r.state_code, 85, startY + 5);
+    doc.text(r.phone, 120, startY + 5);
+    doc.text(r.lga.substring(0, 14), 150, startY + 5);
+    doc.text(r.bank_name.substring(0, 18), 185, startY + 5);
+    doc.text(r.account_name.substring(0, 18), 225, startY + 5);
+    doc.text(r.account_number, 260, startY + 5);
 
     startY += 7;
   });

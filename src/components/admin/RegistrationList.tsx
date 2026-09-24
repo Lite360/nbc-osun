@@ -1,17 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import type { Registration, RegistrationStatus } from '../../types';
 import { OSUN_LGAS } from '../../data/osunLgas';
-import { Search, Filter, Eye, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Search, Eye, Trash2 } from 'lucide-react';
 import { RegistrationDetailModal } from './RegistrationDetailModal';
+import Swal from 'sweetalert2';
 
 interface RegistrationListProps {
   registrations: Registration[];
   onUpdateStatus: (id: string, status: RegistrationStatus, adminNote?: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const RegistrationList: React.FC<RegistrationListProps> = ({
   registrations,
   onUpdateStatus,
+  onDelete,
 }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -44,6 +47,34 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
       return true;
     });
   }, [registrations, search, statusFilter, lgaFilter]);
+
+  const confirmAndDelete = async (id: string, refName: string) => {
+    const res = await Swal.fire({
+      title: 'Delete Record?',
+      text: `Are you sure you want to permanently delete attendance record ${refName}? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#E61C24',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (res.isConfirmed) {
+      if (onDelete) {
+        onDelete(id);
+      }
+      if (selectedReg?.id === id) {
+        setSelectedReg(null);
+      }
+      await Swal.fire({
+        title: 'Deleted!',
+        text: 'Attendance record has been permanently deleted.',
+        icon: 'success',
+        confirmButtonColor: '#E61C24',
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -99,7 +130,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
 
         <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
           <span>
-            Showing <strong>{filtered.length}</strong> of {registrations.length} total registrations
+            Showing <strong>{filtered.length}</strong> of {registrations.length} total attendance records
           </span>
           {(search || statusFilter !== 'all' || lgaFilter !== 'all') && (
             <button
@@ -135,7 +166,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
-                    No matching corps member registrations found.
+                    No matching corps member attendance records found.
                   </td>
                 </tr>
               ) : (
@@ -186,13 +217,21 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                    <td className="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
                       <button
                         onClick={() => setSelectedReg(r)}
                         className="inline-flex items-center space-x-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1 rounded transition text-xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Inspect</span>
+                      </button>
+
+                      <button
+                        onClick={() => confirmAndDelete(r.id, r.registration_reference)}
+                        className="inline-flex items-center p-1 rounded bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-600 transition"
+                        title="Delete Attendance Record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -210,6 +249,11 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({
         onUpdateStatus={(id, status, note) => {
           onUpdateStatus(id, status, note);
           setSelectedReg(null);
+        }}
+        onDelete={(id) => {
+          if (selectedReg) {
+            confirmAndDelete(id, selectedReg.registration_reference);
+          }
         }}
       />
     </div>

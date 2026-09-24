@@ -24,7 +24,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
     Swal.fire({
       icon: 'success',
       title: 'Portal Settings Saved',
-      text: 'Venue details and registration availability updated successfully.',
+      text: 'Venue details and attendance portal availability updated successfully.',
       confirmButtonColor: '#E61C24',
     });
   };
@@ -36,10 +36,10 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
 
     Swal.fire({
       icon: nextStatus ? 'success' : 'warning',
-      title: nextStatus ? 'Registration Opened' : 'Registration Closed',
+      title: nextStatus ? 'Attendance Opened' : 'Attendance Closed',
       text: nextStatus
-        ? 'Public registration portal is now OPEN to corps members.'
-        : 'Public registration portal is now CLOSED.',
+        ? 'Public attendance portal is now OPEN to corps members.'
+        : 'Public attendance portal is now CLOSED.',
       confirmButtonColor: '#E61C24',
     });
   };
@@ -49,7 +49,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-xl font-bold text-slate-900">Portal & Venue Settings</h2>
         <p className="text-xs text-slate-500 mt-1">
-          Configure venue information and control global registration portal availability.
+          Configure venue information and control global attendance portal availability.
         </p>
       </div>
 
@@ -71,12 +71,12 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
           </div>
           <div>
             <h4 className="font-bold text-sm">
-              Registration Portal Status: {isActive ? 'OPEN' : 'CLOSED'}
+              Attendance Portal Status: {isActive ? 'OPEN' : 'CLOSED'}
             </h4>
             <p className="text-xs text-slate-600">
               {isActive
-                ? 'Public registration form is currently open and accepting submissions.'
-                : 'Registration form is locked and unavailable to public applicants.'}
+                ? 'Public attendance form is currently open and accepting submissions.'
+                : 'Attendance form is locked and unavailable to public users.'}
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const VenueSettings: React.FC<VenueSettingsProps> = ({ venue, onSave }) =
               : 'bg-emerald-600 hover:bg-emerald-700 text-white'
           }`}
         >
-          {isActive ? 'Close Registration' : 'Open Registration'}
+          {isActive ? 'Close Attendance' : 'Open Attendance'}
         </button>
       </div>
 

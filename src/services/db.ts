@@ -3,8 +3,8 @@ import type { Registration, VenueSettings, RegistrationStatus } from '../types';
 
 // Obtain connection string from environment variables
 const DATABASE_URL = 
-  (typeof process !== 'undefined' && process.env?.DATABASE_URL) ||
-  (import.meta as any).env?.VITE_DATABASE_URL ||
+  (typeof window !== 'undefined' ? (import.meta as any).env?.VITE_DATABASE_URL : '') ||
+  (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.DATABASE_URL) ||
   '';
 
 let sql: ReturnType<typeof neon> | null = null;
@@ -87,9 +87,9 @@ export const db = {
   // Venue Operations
   async getVenue(): Promise<VenueSettings | null> {
     if (!sql) return null;
-    const rows = await sql`SELECT * FROM venues WHERE id = 'venue-1' LIMIT 1;`;
+    const rows = (await sql`SELECT * FROM venues WHERE id = 'venue-1' LIMIT 1;`) as any[];
     if (!rows.length) return null;
-    const v = rows[0] as any;
+    const v = rows[0];
     return {
       id: v.id,
       name: v.name,
@@ -131,7 +131,7 @@ export const db = {
   // Registrations Operations
   async getRegistrations(): Promise<Registration[] | null> {
     if (!sql) return null;
-    const rows = await sql`SELECT * FROM registrations ORDER BY created_at DESC;`;
+    const rows = (await sql`SELECT * FROM registrations ORDER BY created_at DESC;`) as any[];
     return rows.map((r: any) => ({
       id: r.id,
       registration_reference: r.registration_reference,
@@ -185,5 +185,10 @@ export const db = {
           updated_at = NOW()
       WHERE id = ${id};
     `;
+  },
+
+  async deleteRegistration(id: string): Promise<void> {
+    if (!sql) return;
+    await sql`DELETE FROM registrations WHERE id = ${id};`;
   },
 };
